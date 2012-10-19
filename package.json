@@ -1,0 +1,13 @@
+{
+  "name": "latex-wordcount.chocmixin",
+  "version": "1.0",
+  "description": "Counts the words in a LaTeX document.",
+  "keywords": ["latex", "chocolat", "word", "count"],
+  "author": "Dan Palmer <dan.palmer@me.com>",
+  "homepage": "http://github.com/danpalmer/latex-wordcount.chocmixin",
+  "repository": {
+	"type": "git",
+	"url": "https://github.com/danpalmer/latex-wordcount.chocmixin.git"
+  },
+  "license": "MIT"
+}

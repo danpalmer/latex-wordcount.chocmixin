@@ -1,7 +1,33 @@
 <!DOCTYPE html>
-<h4>LaTeX Wordcount Configuration</h4>
-<script>
-	function settings() {
-		return "Hello World";
+<style type="text/css">
+	body {
+		height: 100px;
+		width: 320px;
+		padding-bottom: 10px;
 	}
-</script>
+	fieldset {
+		border: none;
+	}
+	
+	label {
+		float:left;
+		width:150px;
+		clear: both;
+		height: 35px;
+		text-align: right;
+		margin-right: 10px;
+	}
+	
+	input {
+		float:left;
+	}
+</style>
+<form>
+	<fieldset>
+		<label for="texcountPath">TeXcount Path:</label>
+		<input type="text" name="texcountPath" id="texcountPath" />
+		<br />
+		<label for="include">Count Included Files:</label>
+		<input type="checkbox" name="include" id="include" />
+	</fieldset>
+</form>

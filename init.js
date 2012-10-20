@@ -3,16 +3,18 @@
  * Copyright(c) 2012 Dan Palmer <dan.palmer@me.com>
  */
 
-// Hooks.onInsertText(function(editor) {
-// 	if ('latex.tex.text'.indexOf(Document.current().rootScope())) {
-// 		return;
-// 	}
-// 	count(Document.current());
-// });
-
 var child = require('child_process');
 var async = require('async');
+var storage = Storage.persistent();
 
+var SETTINGS_KEY = 'latex-wordcount-settings';
+if (!storage.get(SETTINGS_KEY)) {
+	storage.set(SETTINGS_KEY, {
+		texcountPath: '', include: true
+	});
+}
+
+Hooks.addMenuItem('Actions/LaTeX/Wordcount Preferences\u2026', '', config);
 Hooks.addKeyboardShortcut('ctrl-alt-cmd-l', function() {
 	var doc = Document.current();
 	if ('latex.tex.text'.indexOf(doc.rootScope())) {
@@ -24,8 +26,6 @@ Hooks.addKeyboardShortcut('ctrl-alt-cmd-l', function() {
 		});
 	});
 });
-
-Hooks.addMenuItem('Actions/LaTeX/Wordcount Preferences\u2026', '', config);
 
 function check(callback) {
 	async.series([
@@ -50,7 +50,14 @@ function check(callback) {
 }
 
 function checkUserSetting(callback) {
-	callback();
+	var userPref = storage.get(SETTINGS_KEY).texcountPath;
+	child.exec('test -e ' + userPref, function(err, stdout, stderr) {
+		if (err) {
+			callback();
+		} else {
+			callback(userPref);
+		}
+	});
 }
 
 function checkTexbin(callback) {
@@ -74,11 +81,9 @@ function checkPath(callback) {
 }
 
 function count(texcount, document, callback) {
-	child.execFile(texcount, [
-		'-inc',
-		'-total',
-		document.path()
-	], function(err, stdout, stderr) {
+	var dir = document.path().replace(/[^\/]*$/, '');
+	var command = 'cd ' + dir + '; ' + texcount + ' -inc -total ' + document.path();
+	child.exec(command, function(err, stdout, stderr) {
 		if (err) {
 			Alert.show('Error', err);
 		} else {
@@ -93,24 +98,32 @@ function count(texcount, document, callback) {
 }
 
 function config() {
-	if (!Editor) {
-		return;
-	}
+	var window = new Window();
 	
-	var window = new Sheet(Editor.current().window());
-	
+	window.setFrame({x:0, y:0, width:350, height:140});
 	window.htmlPath = 'config.html';
 	window.buttons = ['Save', 'Cancel'];
+	window.title = 'LaTeX Wordcount Preferences';
 	window.onButtonClick = function(button) {
 		if (button == 'Save') {
-			saveConfig(window);
+			var settings = {
+				'texcountPath': window.evalExpr('document.getElementById("texcountPath").value || ""'),
+				'include': (window.evalExpr('document.getElementById("include").checked')) ? true : false
+			}
+			storage.set(SETTINGS_KEY, settings);
 		}
+		window.close();
 	};
+	window.onLoad = function() {
+		window.applyFunction(function(settings) {
+			document.getElementById('texcountPath').value = settings.texcountPath;
+			if (settings.include) {
+				document.getElementById('include').setAttribute("checked");
+			} else {
+				document.getElementById('include').removeAttribute("checked");
+			}
+		}, [storage.get(SETTINGS_KEY)]);
+	}
 	
 	window.run();
-}
-
-function saveConfig(window) {
-	var settings = window.evalExpr('settings()');
-	Alert.show('Debug', settings.toString());
 }
